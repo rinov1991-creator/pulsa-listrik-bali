@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Input Pulsa Listrik - OPS Bali</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --orange:#ff9900; --ink:#1d2127; --muted:#5f6772; --line:#d5d9de; --bg:#eef0f2; --card:#fff; --ok:#1b7f3b; --err:#b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#eceff2; --muted:#a2abb5; --line:#3a424b; --bg:#14181c; --card:#1d2227; --ok:#5fd085; --err:#ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 'IBM Plex Sans',system-ui,sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:16px; }
+  header { background:var(--orange); color:#1d2127; padding:18px 20px; border-radius:10px 10px 0 0; }
+  header h1 { margin:0; font-size:1.25rem; font-weight:700; }
+  header p { margin:2px 0 0; font-size:.9rem; }
+  form { background:var(--card); border:1px solid var(--line); border-top:0; border-radius:0 0 10px 10px; padding:20px; }
+  fieldset { border:0; padding:0; margin:0 0 20px; }
+  legend { font-weight:700; padding:0; margin-bottom:10px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .full { grid-column:1 / -1; }
+  label { display:block; font-size:.9rem; color:var(--muted); margin-bottom:4px; }
+  input, select { width:100%; padding:11px 12px; font:500 1.05rem 'IBM Plex Mono',monospace; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:6px; }
+  .hint { margin:0 0 16px; color:var(--muted); font-size:.9rem; }
+  .cek { display:flex; align-items:center; gap:10px; margin-bottom:12px; color:var(--ink); font-size:1rem; cursor:pointer; }
+  .cek input { width:22px; height:22px; padding:0; accent-color:var(--orange); }
+  input:disabled, select:disabled { opacity:.5; cursor:not-allowed; }
+  input[type=date] { font-family:'IBM Plex Sans',sans-serif; font-weight:400; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--orange); outline-offset:1px; }
+  button { width:100%; padding:14px; font:700 1rem 'IBM Plex Sans',sans-serif; color:#1d2127; background:var(--orange); border:0; border-radius:6px; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  #msg { margin-top:14px; font-weight:600; min-height:1.5em; }
+  #msg.ok { color:var(--ok); } #msg.err { color:var(--err); }
+  @media (max-width:420px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Listrik OPS Bali</h1>
+    <p>Input pengecekan meter dan pembelian pulsa listrik</p>
+  </header>
+
+  <form id="f" novalidate>
+    <p class="hint">Angka ditulis pakai koma (,) untuk desimal, contoh 2464,63. Titik (.) tidak bisa dipakai.</p>
+    <fieldset>
+      <legend>Lokasi</legend>
+      <label for="lokasi">Server</label>
+      <select id="lokasi" required>
+        <option value="">-- Pilih lokasi --</option>
+        <option>BSC Uluwatu</option>
+        <option>BSC Akara</option>
+        <option>BTS Cengiling</option>
+        <option>BSC Singaraja</option>
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pengecekan</legend>
+      <div class="grid">
+        <div><label for="tanggal">Tanggal pengecekan</label><input id="tanggal" type="date" required></div>
+        <div><label for="sisaPulsa">Sisa pulsa (kWh)</label><input id="sisaPulsa" type="text" inputmode="decimal" autocomplete="off" class="num" required></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Kode di meter</legend>
+      <div class="grid">
+        <div><label for="kode03">Kode 03, total kWh pakai</label><input id="kode03" type="text" inputmode="decimal" autocomplete="off" class="num" required></div>
+        <div><label for="kode09">Kode 09, daya aktif (W)</label><input id="kode09" type="text" inputmode="decimal" autocomplete="off" class="num" required></div>
+        <div><label for="kode47">Kode 47, daya pakai (W)</label><input id="kode47" type="text" inputmode="decimal" autocomplete="off" class="num" required></div>
+        <div><label for="kode59">Kode 59, token terakhir (kWh)</label><input id="kode59" type="text" inputmode="decimal" autocomplete="off" class="num" required></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pembelian</legend>
+      <label class="cek" for="beli"><input id="beli" type="checkbox"> Ada pembelian pulsa</label>
+      <div class="full">
+        <label for="nominal">Nominal pembelian (Rp)</label>
+        <select id="nominal" disabled><option value="">-- Pilih nominal --</option></select>
+      </div>
+    </fieldset>
+
+    <button id="btn" type="submit">Simpan data</button>
+    <div id="msg" role="status" aria-live="polite"></div>
+  </form>
+</main>
+
+<script>
+  const SCRIPT_URL = "GANTI_DENGAN_URL_WEB_APP";
+
+  const f = document.getElementById("f");
+  const btn = document.getElementById("btn");
+  const msg = document.getElementById("msg");
+  const ids = ["lokasi","tanggal","sisaPulsa","kode03","kode09","kode47","kode59","nominal"];
+
+  function setToday() {
+    document.getElementById("tanggal").value = new Date().toLocaleDateString("en-CA");
+  }
+  setToday();
+
+  // Bisa dibuka langsung ke lokasi tertentu: index_pulsa.html?lokasi=BSC%20Akara
+  const lokasi = document.getElementById("lokasi");
+  function setLokasi() {
+    const q = new URLSearchParams(location.search).get("lokasi");
+    lokasi.value = [...lokasi.options].some(o => o.value === q) ? q : "";
+  }
+  setLokasi();
+
+  const beli = document.getElementById("beli");
+  const nominal = document.getElementById("nominal");
+  for (let n = 100000; n <= 2000000; n += 100000) {
+    const o = document.createElement("option");
+    o.value = String(n);
+    o.textContent = "Rp. " + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    nominal.appendChild(o);
+  }
+  function syncBeli() {
+    nominal.disabled = !beli.checked;
+    if (!beli.checked) nominal.value = "";
+  }
+  beli.addEventListener("change", () => { syncBeli(); if (beli.checked) nominal.focus(); });
+
+  function show(text, cls) { msg.textContent = text; msg.className = cls || ""; }
+
+  // Isian angka: hanya digit dan satu koma. Titik dibuang dan diberi peringatan.
+  const angkaIds = ["sisaPulsa","kode03","kode09","kode47","kode59"];
+  function bersih(el) {
+    const asli = el.value;
+    let v = asli.replace(/[^0-9,]/g, "");
+    const i = v.indexOf(",");
+    if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, "");
+    if (v !== asli) {
+      el.value = v;
+      if (asli.includes(".")) {
+        show("Titik (.) tidak boleh dipakai. Pakai koma (,) untuk desimal.", "err");
+        msg.dataset.tipe = "titik";
+      }
+    } else if (msg.dataset.tipe === "titik") {
+      show(""); msg.dataset.tipe = "";
+    }
+  }
+  angkaIds.forEach(id => document.getElementById(id).addEventListener("input", e => bersih(e.target)));
+
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = {};
+    ids.forEach(id => data[id] = document.getElementById(id).value.trim());
+
+    if (data.lokasi === "") { show("Pilih lokasi dulu.", "err"); return; }
+    const wajib = ids.filter(id => id !== "nominal" && data[id] === "");
+    if (wajib.length) { show("Lengkapi dulu semua kolom pengecekan.", "err"); return; }
+    if (beli.checked && data.nominal === "") { show("Pilih nominal pembelian, atau hilangkan centang.", "err"); return; }
+    const salah = angkaIds.filter(id => data[id] !== "" && !/^\d+(,\d+)?$/.test(data[id]));
+    if (salah.length) { show("Format angka salah. Pakai digit dan satu koma, contoh 2464,63.", "err"); return; }
+
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    show("");
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      });
+      const out = await res.json();
+      if (out.result === "success") {
+        show("Tersimpan di " + data.lokasi + ", baris " + out.row + ".", "ok");
+        f.reset(); setToday(); syncBeli(); setLokasi();
+      } else {
+        show(out.message || "Gagal menyimpan. Coba lagi.", "err");
+      }
+    } catch (err) {
+      show("Tidak bisa terhubung ke server. Cek koneksi dan URL Web App.", "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Simpan data";
+    }
+  });
+</script>
+</body>
+</html>
