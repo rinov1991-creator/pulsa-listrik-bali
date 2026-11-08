@@ -247,7 +247,7 @@
     <div class="bar">
       <div class="val"><i aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/></svg></i>Validasi sebelum penyimpanan</div>
       <div class="acts">
-        <button class="btn" id="reset" type="button">Reset</button>
+        <button class="btn" id="btnReset" type="button">Reset</button>
         <button class="btn main" id="btn" type="submit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 10A7.5 7.5 0 0 0 5 8.6 5.5 5.5 0 0 0 6 19.5h12a4.5 4.5 0 0 0 1.4-9.5zM13 14v3h-2v-3H8l4-4 4 4z"/></svg><span id="btnTxt">Simpan Data</span></button>
       </div>
     </div>
@@ -325,7 +325,7 @@
   function resetForm() {
     f.reset(); setToday(); syncBeli(); setLokasi();
   }
-  document.getElementById("reset").addEventListener("click", () => { resetForm(); show(""); });
+  document.getElementById("btnReset").addEventListener("click", () => { resetForm(); show(""); });
 
   f.addEventListener("submit", async (e) => {
     e.preventDefault();
